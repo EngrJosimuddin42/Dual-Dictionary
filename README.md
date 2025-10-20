@@ -44,8 +44,6 @@ git clone https://github.com/EngrJosimuddin42/Dual-Dictionary.git
 Engr. Josimuddin
 📧 josimcse@gmail.com
 
-🌐 GitHub Profile
-
 ---
 
 🪪 License
