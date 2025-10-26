@@ -1,6 +1,6 @@
 ✅ Dual Dictionary  
 🚀 Project: Dual Dictionary (English ↔ Bengali)  
-👨‍💻 Developer: Engr. Josimuddin (he/him)  
+👨‍💻 Developer: Engr.Josimuddin (he/him)  
 🏢 Company: Independent Developer  
 📍 Location: Dhaka, Bangladesh  
 🔗 Portfolio / LinkedIn: [LinkedIn](https://www.linkedin.com/in/engrjosimuddin/)

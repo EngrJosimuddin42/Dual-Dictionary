@@ -8,29 +8,33 @@ class DBHelper {
   static Database? _englishDb;
   static Database? _banglaDb;
 
+  // ✅ Load English Database
   static Future<Database> getEnglishDb() async {
     if (_englishDb != null) return _englishDb!;
     _englishDb = await _loadDb("assets/english_words.db");
     return _englishDb!;
   }
 
+  // ✅ Load Bangla Database
   static Future<Database> getBanglaDb() async {
     if (_banglaDb != null) return _banglaDb!;
     _banglaDb = await _loadDb("assets/bangla_words.db");
     return _banglaDb!;
   }
 
+  // ✅ Copy DB from assets if not exists
   static Future<Database> _loadDb(String assetPath) async {
     final databasesPath = await getDatabasesPath();
     final path = join(databasesPath, basename(assetPath));
 
     if (!await File(path).exists()) {
       ByteData data = await rootBundle.load(assetPath);
-      List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      List<int> bytes =
+      data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
       await File(path).writeAsBytes(bytes, flush: true);
     }
-
-    return openDatabase(path, readOnly: true);
+    final db = await openDatabase(path, readOnly: true);
+    return db;
   }
 
   /// ✅ English → Bangla
@@ -38,7 +42,6 @@ class DBHelper {
     try {
       final db = await getEnglishDb();
       final cleanedWord = word.trim().toLowerCase();
-
       final result = await db.query(
         'words',
         where: 'LOWER(word) = ?',
@@ -48,18 +51,15 @@ class DBHelper {
 
       if (result.isNotEmpty) {
         final row = result.first;
-        final meaning = row['meaning']?.toString() ?? '-';
-        final pos = row['part_of_speech']?.toString() ?? '-';
-        final example = row['example']?.toString() ?? '-';
-
-        return "Meaning: $meaning\nPart of Speech: $pos\nExample: $example";
-      } else {
-        return null; // ❌ No partial matches allowed
+        return "Meaning: ${row['meaning'] ?? '-'}\n"
+            "Part of Speech: ${row['part_of_speech'] ?? '-'}\n"
+            "Example: ${row['example'] ?? '-'}";
       }
+      return null;
     } catch (e) {
-      debugPrint("English DB Error: $e");
+      debugPrint("❌ English DB Error: $e");
+      return null;
     }
-    return null;
   }
 
   /// ✅ Bangla → English
@@ -70,27 +70,25 @@ class DBHelper {
 
       final result = await db.query(
         'words',
-        where: 'word = ?',
-        whereArgs: [cleanedWord],
+        where: 'word LIKE ?',
+        whereArgs: ['$cleanedWord%'],
         limit: 1,
       );
 
       if (result.isNotEmpty) {
         final row = result.first;
-        final meaning = row['meaning']?.toString() ?? '-';
-        final pos = row['part_of_speech']?.toString() ?? '-';
-        final example = row['example']?.toString() ?? '-';
-
-        return "অর্থ: $meaning\nশব্দের প্রকার: $pos\nউদাহরণ: $example";
-      } else {
-        return null; // ❌ No partial matches allowed
+        return "অর্থ: ${row['meaning'] ?? '-'}\n"
+            "শব্দের প্রকার: ${row['part_of_speech'] ?? '-'}\n"
+            "উদাহরণ: ${row['example'] ?? '-'}";
       }
+      return null;
     } catch (e) {
-      debugPrint("Bangla DB Error: $e");
+      debugPrint("❌ Bangla DB Error: $e");
+      return null;
     }
-    return null;
   }
 
+  /// ✅ English Suggestions
   static Future<List<String>> getMatchingEnglishWords(String query) async {
     if (query.isEmpty) return [];
     try {
@@ -105,11 +103,12 @@ class DBHelper {
       );
       return result.map((e) => e['word'].toString()).toList();
     } catch (e) {
-      debugPrint("English Suggestion Error: $e");
+      debugPrint("❌ English Suggestion Error: $e");
       return [];
     }
   }
 
+  /// ✅ Bangla Suggestions
   static Future<List<String>> getMatchingBanglaWords(String query) async {
     if (query.isEmpty) return [];
     try {
@@ -124,7 +123,7 @@ class DBHelper {
       );
       return result.map((e) => e['word'].toString()).toList();
     } catch (e) {
-      debugPrint("Bangla Suggestion Error: $e");
+      debugPrint("❌ Bangla Suggestion Error: $e");
       return [];
     }
   }

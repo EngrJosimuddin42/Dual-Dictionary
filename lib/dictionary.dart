@@ -18,7 +18,7 @@ class _DictionaryHomeState extends State<DictionaryHome> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 
-  String? _wordDetails; // 🔹 String type now
+  String? _wordDetails;
   DictionaryMode _mode = DictionaryMode.englishToBangla;
   List<String> _suggestions = [];
   List<Map<String, String>> _recentSearches = [];
@@ -39,14 +39,15 @@ class _DictionaryHomeState extends State<DictionaryHome> {
   }
 
   void _loadRecentSearches() {
+    final list = _mode == DictionaryMode.englishToBangla
+        ? (_prefs.getStringList(recentEnKey) ?? [])
+        : (_prefs.getStringList(recentBnKey) ?? []);
+
     setState(() {
-      final list = _mode == DictionaryMode.englishToBangla
-          ? (_prefs.getStringList(recentEnKey) ?? [])
-          : (_prefs.getStringList(recentBnKey) ?? []);
       _recentSearches = list
-          .map((e) => {
-        'word': e.split('|')[0],
-        'date': e.split('|')[1],
+          .map((e) {
+        final parts = e.split('|');
+        return {'word': parts[0], 'date': parts[1]};
       })
           .toList();
     });
@@ -67,37 +68,29 @@ class _DictionaryHomeState extends State<DictionaryHome> {
       setState(() => _suggestions.clear());
       return;
     }
-    try {
-      List<String> results = _mode == DictionaryMode.englishToBangla
-          ? await DBHelper.getMatchingEnglishWords(query)
-          : await DBHelper.getMatchingBanglaWords(query);
-      setState(() => _suggestions = results);
-    } catch (e) {
-      debugPrint("Suggestions Error: $e");
-      setState(() => _suggestions.clear());
-    }
+
+    final results = _mode == DictionaryMode.englishToBangla
+        ? await DBHelper.getMatchingEnglishWords(query)
+        : await DBHelper.getMatchingBanglaWords(query);
+
+    setState(() => _suggestions = results);
   }
 
   Future<void> _searchWord([String? word]) async {
     final searchWord = (word ?? _searchController.text).trim();
     if (searchWord.isEmpty) return;
 
-    String? result;
-    try {
-      result = _mode == DictionaryMode.englishToBangla
-          ? await DBHelper.getEnglishWordDetails(searchWord)
-          : await DBHelper.getBanglaWordDetails(searchWord);
-    } catch (e) {
-      debugPrint("Search Error: $e");
-    }
+    final result = _mode == DictionaryMode.englishToBangla
+        ? await DBHelper.getEnglishWordDetails(searchWord)
+        : await DBHelper.getBanglaWordDetails(searchWord);
 
     setState(() {
       _wordDetails = result ??
           (_mode == DictionaryMode.englishToBangla
-              ? "Meaning: Sorry! No result found.\nPart of Speech: -\nExample: -"
+              ? "Meaning:  Sorry! No result found.\nPart of Speech: -\nExample: -"
               : "অর্থ: দুঃখিত! এই শব্দটি পাওয়া যায়নি।\nশব্দের প্রকার: -\nউদাহরণ: -");
       _searchController.text = searchWord;
-      _suggestions.clear(); // close suggestions
+      _suggestions.clear();
     });
 
     // Save recent search
@@ -194,9 +187,7 @@ class _DictionaryHomeState extends State<DictionaryHome> {
   }
 
   void _shareMeaning() {
-    if (_wordDetails != null) {
-      Share.share(_wordDetails!);
-    }
+    if (_wordDetails != null) Share.share(_wordDetails!);
   }
 
   @override
@@ -217,7 +208,9 @@ class _DictionaryHomeState extends State<DictionaryHome> {
         title: const Text(
           "Dual Dictionary",
           style: TextStyle(
-              fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: Colors.white),
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.bold,
+              color: Colors.white),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
@@ -256,8 +249,9 @@ class _DictionaryHomeState extends State<DictionaryHome> {
               labelText: _mode == DictionaryMode.englishToBangla
                   ? "Search English Word"
                   : "বাংলা শব্দ খুঁজুন",
-              border:
-              OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               suffixIcon: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -272,7 +266,6 @@ class _DictionaryHomeState extends State<DictionaryHome> {
             ),
             onSubmitted: (_) => _searchWord(),
           ),
-
           if (_suggestions.isNotEmpty)
             Container(
               margin: const EdgeInsets.only(top: 4),
@@ -294,9 +287,7 @@ class _DictionaryHomeState extends State<DictionaryHome> {
                 },
               ),
             ),
-
           const SizedBox(height: 20),
-
           if (_wordDetails != null)
             Expanded(
               child: Container(
@@ -309,28 +300,28 @@ class _DictionaryHomeState extends State<DictionaryHome> {
                 ),
                 child: SingleChildScrollView(
                   child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _wordDetails!,
-                          style: const TextStyle(
-                              fontFamily: 'Poppins', fontSize: 16),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            IconButton(
-                                icon:
-                                const Icon(Icons.copy, color: Colors.indigo),
-                                onPressed: _copyMeaning),
-                            IconButton(
-                                icon:
-                                const Icon(Icons.share, color: Colors.indigo),
-                                onPressed: _shareMeaning),
-                          ],
-                        )
-                      ]),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _wordDetails!,
+                        style: const TextStyle(
+                            fontFamily: 'Poppins', fontSize: 16),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                              icon: const Icon(Icons.copy, color: Colors.indigo),
+                              onPressed: _copyMeaning),
+                          IconButton(
+                              icon:
+                              const Icon(Icons.share, color: Colors.indigo),
+                              onPressed: _shareMeaning),
+                        ],
+                      )
+                    ],
+                  ),
                 ),
               ),
             ),

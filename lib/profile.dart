@@ -7,11 +7,7 @@ class Profile extends StatelessWidget {
   // ফোন কল করার ফাংশন
   Future<void> _makeCall() async {
     final Uri callUri = Uri(scheme: "tel", path: "+8801518380199");
-    try {
       await launchUrl(callUri, mode: LaunchMode.externalApplication);
-    } catch (e) {
-      debugPrint("❌ Could not launch dialer: $e");
-    }
   }
 
   // ইমেইল পাঠানোর ফাংশন
@@ -21,11 +17,7 @@ class Profile extends StatelessWidget {
       path: "josimcse@gmail.com",
       query: "subject=Hello&body=How are you?",
     );
-    try {
       await launchUrl(emailUri, mode: LaunchMode.externalApplication);
-    } catch (e) {
-      debugPrint("❌ Could not launch email app: $e");
-    }
   }
 
   // Feature point builder

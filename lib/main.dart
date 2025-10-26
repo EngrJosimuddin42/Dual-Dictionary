@@ -125,7 +125,7 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // 🔹 Light theme background
+      backgroundColor: Colors.white,
       body: AnimatedBuilder(
         animation: _pulseAnimation,
         builder: (context, child) {
